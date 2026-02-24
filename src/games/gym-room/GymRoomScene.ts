@@ -1,0 +1,538 @@
+import Phaser from "phaser";
+import { getGameWidth, getGameHeight } from "../helpers";
+import { Player } from "../objects";
+import { PLAYER_SCALE, GYM_ROOM_SCENE } from "..";
+import {
+  GYM_ROOM_MAP,
+  GYM_ROOM_TILESET,
+  GYM_ROOM_BG,
+  STEP_SOUND,
+  BLOP_SOUND,
+  LOCKED_SOUND,
+  LOCK,
+} from "../gym-room-boot/assets";
+import { createTextBox } from "../utils/text";
+import { debugCollisonBounds } from "../utils/collision_debugger";
+import {
+  setMainRoomPlayerExitPos,
+  playerHasExitPos,
+  getMainRoomPlayerExitPos,
+} from "../utils/Globals";
+import {
+  highlightTextColorNum,
+  mainBgColorNum,
+  MMT_TICKER,
+} from "../../GlobalStyles";
+import { EarnableScene } from "../base-scenes/EarnableScene";
+import { showSnapchatModal } from "./snapchat";
+import { commingSoonModal } from "./comming-soon";
+import { TextBox } from "phaser3-rex-plugins/templates/ui/ui-components";
+import {
+  isRoomLocked,
+  waterRoomLockKey,
+  runnerRoomLockKey,
+  mysteryRoomLockKey,
+  updateMiniGamesAccess,
+} from "@services/games/games-access";
+import { debugLog } from "dev-utils/debug";
+import { userRepository } from "repositories";
+
+// for debuging
+const roomDevelopmentYOffset = 0; // 1800
+const roomDevelopmentXOffset = 0; // 1800
+
+const debugCollisons = false;
+
+const SceneConfig = {
+  active: false,
+  visible: false,
+  key: GYM_ROOM_SCENE,
+};
+
+const mapScale = 1;
+const tileMapSizing = 32;
+
+const miniGamesMapping = new Map([
+  ["space_stretch", "Space Mat"],
+  ["fly_fit", "Sky Mat"],
+  ["snap", "Snapchat"],
+  ["chart_squats", "Chart Squats Mat"],
+  ["matrix", "Mystery Mat"],
+  ["gym_canals", "Gym Canals"],
+  ["invaders", "Space Invaders"],
+  ["kayaks", "Kayaks"],
+  ["runner", "Runner"],
+  ["race_track", "Race Track"],
+]);
+
+const roomNamesMapping = new Map([
+  [waterRoomLockKey, "Water Room"],
+  [runnerRoomLockKey, "Runner Room"],
+  [mysteryRoomLockKey, "Mystery Room"],
+]);
+
+const commingSoon = ["kayaks"];
+
+let sceneToGoOnXclick: string;
+const roboTextTimeouts: NodeJS.Timeout[] = [];
+
+export class GymRoomScene extends EarnableScene {
+  selectedAvatar: any;
+  player!: Player;
+  collidingTrainingMat!: any;
+  walkSound!: Phaser.Sound.BaseSound;
+  blopSound!: Phaser.Sound.BaseSound;
+  lockedSound!: Phaser.Sound.BaseSound;
+  lastWalksSoundPlayed = Date.now();
+  unlockHintText: TextBox | undefined;
+  matHovered = false;
+  playMinigameText!: TextBox;
+
+  constructor() {
+    super(SceneConfig);
+  }
+
+  init = () => {
+    const userRepo = userRepository({
+      moralisUser: this.gameUser(),
+      avatar: this.game.registry.values?.avatar,
+    });
+    const userStats = userRepo.getStats();
+
+    debugLog("[saved userStats]", userStats);
+    updateMiniGamesAccess(userStats);
+    this.selectedAvatar = this.game.registry.values?.avatar;
+  };
+
+  create() {
+    // basic props
+    const width = getGameWidth(this);
+    const height = getGameHeight(this);
+
+    // sound
+    this.walkSound = this.sound.add(STEP_SOUND, { volume: 0.5 });
+    this.blopSound = this.sound.add(BLOP_SOUND, { volume: 0.5 });
+    this.lockedSound = this.sound.add(LOCKED_SOUND, { volume: 0.5 });
+
+    // this.cameras.main.backgroundColor.setTo(179, 201, 217);
+    // constrols
+    this.input?.keyboard?.on(
+      "keydown",
+      (event: { keyCode: any }) => {
+        const code = event.keyCode;
+        if (sceneToGoOnXclick && code === Phaser.Input.Keyboard.KeyCodes.X) {
+          roboTextTimeouts.forEach((t) => clearTimeout(t));
+          setMainRoomPlayerExitPos(this.player.x, this.player.y);
+          if (commingSoon.includes(sceneToGoOnXclick)) {
+            commingSoonModal(miniGamesMapping.get(sceneToGoOnXclick) ?? "");
+          } else if (sceneToGoOnXclick === "snap") {
+            showSnapchatModal(this.selectedAvatar?.snapARLink);
+          } else {
+            this.game.registry.values?.setMinigame(sceneToGoOnXclick);
+            this.scene.start(sceneToGoOnXclick);
+          }
+        }
+      },
+      this,
+    );
+    // map
+    const map = this.make.tilemap({
+      key: GYM_ROOM_MAP,
+      tileWidth: tileMapSizing,
+      tileHeight: tileMapSizing,
+    });
+
+    const bg = this.add.image(
+      map.widthInPixels / 2,
+      map.heightInPixels / 2,
+      GYM_ROOM_BG,
+    );
+    bg.setDisplaySize(map.widthInPixels * 1.5, map.heightInPixels * 1.5);
+
+    const tileset = map.addTilesetImage("gym_room_tileset", "gym_room_tileset");
+    if (!tileset) throw new Error("Tileset 'gym_room_tileset' not found");
+    const groundLayer = map.createLayer("floor", [tileset]);
+    if (!groundLayer) throw new Error("Layer 'floor' not found");
+    groundLayer.setScale(mapScale);
+
+    const wallsLayer = map.createLayer("walls", [tileset]);
+    if (!wallsLayer) throw new Error("Layer 'walls' not found");
+    wallsLayer.setScale(mapScale);
+    wallsLayer.setCollisionByProperty({ collides: true });
+
+    const itemsLayer = map.createLayer("items", [tileset]);
+    if (!itemsLayer) throw new Error("Layer 'items' not found");
+    itemsLayer.setScale(mapScale);
+    itemsLayer.setCollisionByProperty({ collides: true });
+
+    const trainingMatsLayer = map.createLayer("training_mats", [tileset]);
+    if (!trainingMatsLayer) throw new Error("Layer 'training_mats' not found");
+    trainingMatsLayer.setScale(mapScale);
+
+    this.tweens.add({
+      targets: trainingMatsLayer,
+      x: "-=10",
+      ease: Phaser.Math.Easing.Sine.InOut,
+      repeat: -1,
+      yoyo: true,
+      duration: 500,
+    });
+
+    const primaryColor = Phaser.Display.Color.ValueToColor(0xffffff)
+      .gray(255)
+      .lighten(100)
+      .brighten(100)
+      .saturate(10);
+
+    const secondaryColor =
+      Phaser.Display.Color.ValueToColor(0xffffff).gray(200);
+
+    this.tweens.addCounter({
+      from: 0,
+      to: 100,
+      duration: 500,
+      ease: Phaser.Math.Easing.Sine.InOut,
+      repeat: -1,
+      yoyo: true,
+      onUpdate: (tween) => {
+        const value = tween.getValue();
+        const safeValue = value === null ? undefined : value;
+        const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(
+          primaryColor,
+          secondaryColor,
+          100,
+          safeValue,
+        );
+        const { r, g, b } = colorObject;
+        const color = Phaser.Display.Color.GetColor(r, g, b);
+        trainingMatsLayer.culledTiles.forEach((t) => {
+          t.tint = color;
+        });
+      },
+    });
+
+    const resolvePlayerXY = (): {
+      x: number;
+      y: number;
+    } => {
+      if (playerHasExitPos()) {
+        return getMainRoomPlayerExitPos();
+      }
+      const playerObjLayer = map.getObjectLayer("player");
+      if (!playerObjLayer || !playerObjLayer.objects.length)
+        throw new Error("Player object layer missing or empty");
+      const obj = playerObjLayer.objects[0];
+      if (!obj.x || !obj.y) {
+        throw Error(
+          `player object x or y are undefined ${JSON.stringify(obj)}`,
+        );
+      }
+      return {
+        x: obj.x * mapScale + roomDevelopmentXOffset,
+        y: obj.y * mapScale - roomDevelopmentYOffset,
+      };
+    };
+    this.player = new Player({
+      scene: this,
+      ...resolvePlayerXY(),
+    });
+    this.player.setScale(PLAYER_SCALE);
+    if (this.player?.body) {
+      this.player.setDepth(1);
+      this.player.body.setSize(
+        this.player.width * 0.5,
+        this.player.height * 0.3,
+      );
+      this.player.body.setOffset(
+        this.player.width * 0.25,
+        this.player.height * 0.6,
+      );
+    }
+
+    const roundPixels = true;
+    this.cameras.main.startFollow(this.player, roundPixels, 0.1, 0.1);
+
+    // world bounds
+    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.physics.world.setBoundsCollision(true, true, true, true);
+    this.player.playerBody().setCollideWorldBounds(true);
+
+    // colliders
+    if (!this.player) {
+      throw new Error("Player not initialized in GymRoomScene");
+    }
+
+    this.physics.add.collider(this.player, wallsLayer);
+    this.physics.add.collider(this.player, itemsLayer);
+
+    // text
+    const hintTextBox = createTextBox({
+      scene: this,
+      x: width / 2 + width / 4,
+      y: height * 0.015,
+      config: { wrapWidth: 280 },
+    })
+      .setDepth(1)
+      .setScrollFactor(0, 0)
+      .start("🤖", 50);
+
+    if (!playerHasExitPos()) {
+      roboTextTimeouts.push(
+        setTimeout(() => {
+          if (!hintTextBox) return;
+          hintTextBox.start(
+            "🤖 Welcome 👋\n" +
+              "Enter MetaGymLand\n" +
+              "And do some stretches 💪\n" +
+              "\n" +
+              "Hint...\n" +
+              "Stand on the GLOWING MATS",
+            30,
+          );
+        }, 1000),
+      );
+    }
+
+    // add colliders to unlocked rooms
+    const playerHandelCollideWithLock = (_player: any, lock: any) => {
+      const objName = lock.name;
+      const msg =
+        `${roomNamesMapping.get(objName) ?? ""} ` +
+        ` is locked` +
+        `\n\n` +
+        `You need to earn access pass\n` +
+        `By training in this room first\n\n` +
+        `Click ...level... in the Side Menu\n` +
+        `To check the rules`;
+      if (!this.unlockHintText) {
+        this.unlockHintText = createTextBox({
+          scene: this,
+          x: width / 2 + this.player.width / 2,
+          y: height / 2 - this.player.height,
+          config: { wrapWidth: 280 },
+          bg: mainBgColorNum,
+          stroke: highlightTextColorNum,
+        })
+          .setOrigin(0.5)
+          .setDepth(1)
+          .setScrollFactor(0, 0)
+          .start(msg, 10);
+
+        this.time.addEvent({
+          delay: 10000,
+          callback: () => {
+            if (this.unlockHintText) {
+              this.unlockHintText.destroy();
+              this.unlockHintText = undefined;
+            }
+          },
+        });
+      }
+
+      if (!this.lockedSound.isPlaying) {
+        this.lockedSound.play();
+      }
+    };
+    const roomLocksLayer = map.getObjectLayer("room_locks");
+    if (roomLocksLayer?.objects) {
+      for (const roomLock of roomLocksLayer.objects) {
+        debugLog("[roomLock]", roomLock);
+        if (
+          !roomLock.name ||
+          !roomLock.x ||
+          !roomLock.y ||
+          !roomLock.width ||
+          !roomLock.height ||
+          !roomLock.properties
+        ) {
+          throw Error(
+            `roomLock object has undefined values (name, properties, x, y, width, height) ${JSON.stringify(
+              roomLock,
+            )}`,
+          );
+        }
+        const { name, properties, x, y, width, height } = roomLock;
+        if (
+          isRoomLocked({
+            lockName: name,
+          })
+        ) {
+          const roomLockRect = this.add
+            .rectangle(
+              x * mapScale,
+              y * mapScale,
+              width * mapScale,
+              height * mapScale,
+            )
+            .setName(name)
+            .setOrigin(0)
+            .setFillStyle(0x000000, 0.8);
+
+          const lockImage = this.add.image(x * mapScale, y * mapScale, LOCK);
+          const objProps = properties as any[];
+          type orientationPropType = { value: string } | undefined;
+          const orientationProp = objProps.find(
+            (p) => p.name === "orientation",
+          ) as orientationPropType;
+          const orientation = orientationProp
+            ? orientationProp && orientationProp.value
+            : "vertical";
+          debugLog("[orientation]", orientation);
+          if (orientation === "vertical") {
+            lockImage.setOrigin(0.43, 0.05);
+          } else {
+            lockImage.setOrigin(0, 0.5);
+          }
+
+          this.physics.world.enable(
+            roomLockRect,
+            Phaser.Physics.Arcade.STATIC_BODY,
+          );
+          this.physics.add.collider(
+            this.player,
+            roomLockRect,
+            playerHandelCollideWithLock,
+            undefined,
+            this,
+          );
+        }
+      }
+    }
+
+    const trainingMats: Phaser.GameObjects.Rectangle[] = [];
+    const miniGamesLayer = map.getObjectLayer("mini_games");
+    if (miniGamesLayer?.objects) {
+      miniGamesLayer.objects.forEach((object) => {
+        if (!object.x || !object.y || !object.width || !object.height) {
+          throw Error(
+            `player object has undefined values (x, y, width, height) ${JSON.stringify(
+              object,
+            )}`,
+          );
+        }
+        const x = object.x * mapScale;
+        const y = object.y * mapScale;
+        const objWidth = object.width * mapScale;
+        const objHeight = object.height * mapScale;
+        const trainingMatRect = this.add
+          .rectangle(x, y, objWidth, objHeight)
+          .setName(object.name)
+          .setOrigin(0);
+        this.physics.world.enable(
+          trainingMatRect,
+          Phaser.Physics.Arcade.STATIC_BODY,
+        );
+        trainingMats.push(trainingMatRect);
+      });
+    }
+
+    const playerMatHandelOverlap = (player: any, matRectangle: any) => {
+      const objName = matRectangle.name;
+      if (
+        player.body.touching.none &&
+        this.collidingTrainingMat !== matRectangle
+      ) {
+        this.collidingTrainingMat = matRectangle;
+        matRectangle.setFillStyle(0x33dd33, 0.3);
+        roboTextTimeouts.forEach((t) => clearTimeout(t));
+        sceneToGoOnXclick = objName;
+        let msg = "";
+        if (objName === "snap") {
+          msg = `🤖 press X to let your GymBuddy enter Snapchat 🚀`;
+        } else {
+          msg = `🤖 press X to train on\n${miniGamesMapping.get(objName)} 🚀`;
+        }
+
+        this.playMinigameText = createTextBox({
+          scene: this,
+          x: width / 2 + this.player.width / 2,
+          y: height / 2 - this.player.height,
+          config: { wrapWidth: 280 },
+          bg: mainBgColorNum,
+          stroke: highlightTextColorNum,
+        })
+          .setOrigin(0.5)
+          .setDepth(1)
+          .setScrollFactor(0, 0)
+          .start(msg, 20);
+
+        // play sound
+        if (!this.matHovered && !this.blopSound.isPlaying) {
+          this.blopSound.play();
+        }
+        this.matHovered = true;
+      }
+    };
+
+    this.physics.add.overlap(
+      this.player,
+      trainingMats,
+      playerMatHandelOverlap,
+      undefined,
+      this,
+    );
+    const overlapendCallback = () => {
+      if (this.collidingTrainingMat) {
+        this.playMinigameText.destroy();
+        this.matHovered = false;
+        const mat = this.collidingTrainingMat;
+        mat.setFillStyle(null, 0);
+        this.collidingTrainingMat = null;
+        roboTextTimeouts.push(
+          setTimeout(() => {
+            if (!hintTextBox) return;
+            hintTextBox.start("🤖", 50);
+          }, 1000),
+        );
+      }
+    };
+
+    this.player.on("overlapend", overlapendCallback);
+
+    // MBMT inventory
+    const mbmtEarnedInventory = createTextBox({
+      scene: this,
+      x: width * 0.05,
+      y: height * 0.015,
+      config: { wrapWidth: 280 },
+      bg: 0xffd7d7,
+      stroke: 0xffffff,
+      align: "center",
+      txtColor: "#FD377E",
+    });
+    mbmtEarnedInventory.setScrollFactor(0, 0);
+    const formattedBalance = () => {
+      return this.currentXPBalance().toFixed(4);
+    };
+    mbmtEarnedInventory.start(`${MMT_TICKER}: ${formattedBalance()}`, 10);
+    // debugging
+    if (debugCollisons) {
+      debugCollisonBounds(wallsLayer, this);
+    }
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  update(_time: any, _delta: any) {
+    // overlapend event
+    if (this.player?.body) {
+      const touching = !this.player.body.touching.none;
+      const wasTouching = !this.player.body.wasTouching.none;
+      // if (touching && !wasTouching) block.emit("overlapstart");
+      if (!touching && wasTouching) this.player.emit("overlapend");
+    }
+    const now = Date.now();
+    const walkSoundPlayedTimeElasped = now - this.lastWalksSoundPlayed;
+
+    // Every frame, we update the player
+    const moving = this.player?.update();
+    // play walk sound tiwh throttling
+    if (
+      moving &&
+      !this.walkSound.isPlaying &&
+      walkSoundPlayedTimeElasped > 500
+    ) {
+      this.lastWalksSoundPlayed = Date.now();
+      this.walkSound.play();
+    }
+  }
+}
