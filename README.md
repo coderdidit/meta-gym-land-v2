@@ -1,8 +1,17 @@
 # `MetaGymLand App`
 
-MetaGymLand Wellness Metaverse Powered with AI and NFTs
+MetaGymLand Wellness Metaverse Powered with AI
 
 https://metagymland.com/
+
+## License and Rights
+
+Copyright (c) 2026 Marcin Kużdowicz.
+All rights reserved.
+
+This repository is public for visibility only.
+No permission is granted to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell this software without prior written permission.
 
 ### This repo has the main frontend logic of MetaGymLand App for:
 
