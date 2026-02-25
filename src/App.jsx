@@ -1,4 +1,9 @@
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  HashRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import DemoAvatar from "components/DemoAvatar";
 import GymBuddyDetails from "components/GymBuddyDetails";
 import { Layout, Divider } from "antd";
@@ -83,6 +88,14 @@ const App = () => {
             <Route path="player-progress" element={<ProgressPage />} />
             <Route path="demo-avatar" element={<DemoAvatar />} />
             <Route
+              path="avatars"
+              element={<Navigate to="/demo-avatar" replace />}
+            />
+            <Route
+              path="avatars/*"
+              element={<Navigate to="/demo-avatar" replace />}
+            />
+            <Route
               path="gym-buddy-details/:address/:id"
               element={<GymBuddyDetails />}
             />
@@ -100,6 +113,7 @@ const App = () => {
             </Route>
             <Route path="socials" element={<SocialsPage />} />
             <Route path="loader" element={<LoaderTest />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </Router>

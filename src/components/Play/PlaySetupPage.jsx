@@ -22,7 +22,7 @@ const PlaySetupPage = () => {
   const { webcamId } = useContext(WebcamCtx);
 
   if (!avatar) {
-    return <Navigate to="/avatars" />;
+    return <Navigate to="/demo-avatar" />;
   }
 
   const linkToJoinMetaGymLand = () => {

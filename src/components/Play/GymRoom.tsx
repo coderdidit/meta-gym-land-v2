@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useContext } from "react";
-import { GameInstance, IonPhaser } from "@ion-phaser/react";
 import { MiniGameCtx } from "index";
 import PoseDetWebcam from "components/Webcam/PoseDetWebcam";
 import SideMenu from "./GymRoomSideMenu";
 import { getGameConfig, preBoot } from "games/game";
 import { createMockUser } from "../../types/user";
+import PhaserGame from "./PhaserGame";
 
-type ionGameInstance = GameInstance | undefined;
-const IonPhaserComponent = IonPhaser as unknown as React.ComponentType<any>;
+type PhaserGameConfig = Phaser.Types.Core.GameConfig | undefined;
 
 const GymRoom = ({
   avatar,
@@ -19,9 +18,8 @@ const GymRoom = ({
   miniGameId: string | null;
 }) => {
   // run game
-  const [initialised, setInitialised] = useState(true);
-  // needs to be undefined at start, otherwise 2 game canvases will load
-  const [config, setConfig] = useState(undefined as ionGameInstance);
+  // Keep undefined at start to avoid immediate mount before preBoot data is ready.
+  const [config, setConfig] = useState(undefined as PhaserGameConfig);
   const { setMinigame } = useContext(MiniGameCtx);
   // Use mock user instead of Moralis user
   const user = createMockUser();
@@ -35,8 +33,6 @@ const GymRoom = ({
       ...getGameConfig(),
       callbacks: {
         preBoot: (game: Phaser.Game) => {
-          // Makes sure the game doesnt create another game on rerender
-          setInitialised(false);
           preBoot({
             game,
             avatar,
@@ -46,7 +42,7 @@ const GymRoom = ({
           });
         },
       },
-    } as ionGameInstance;
+    } as PhaserGameConfig;
     setConfig(ionGameConfig);
   };
 
@@ -60,9 +56,8 @@ const GymRoom = ({
   }, [avatar, miniGameId]);
 
   return (
-    <IonPhaserComponent
-      initialize={initialised}
-      game={config}
+    <PhaserGame
+      config={config}
       id="phaser-app"
       style={{
         position: "absolute",
@@ -96,7 +91,7 @@ const GymRoom = ({
           />
         </div>
       )}
-    </IonPhaserComponent>
+    </PhaserGame>
   );
 };
 

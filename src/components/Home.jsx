@@ -84,7 +84,7 @@ export default function Home() {
                 marginRight: "1rem",
               }}
             >
-              <Link to="/avatars">Play now</Link>
+              <Link to="/demo-avatar">Play now</Link>
             </Button> */}
             <Button
               style={{

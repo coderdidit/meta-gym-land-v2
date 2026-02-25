@@ -10,8 +10,7 @@ import { UserProgressModalWithIcon } from "components/user-progrees";
 import { SelectWebcamModalWithIcon } from "components/Webcam/select-webcam-modal";
 import { createMockUser } from "../../types/user";
 
-const InfoCircleFilledIcon =
-  InfoCircleFilled as unknown as React.ComponentType<any>;
+const InfoCircleFilledIcon = InfoCircleFilled as any;
 
 const miniGameInstructions = (minigame: string) => {
   const i = MiniGameInstructions.get(minigame);

@@ -6,7 +6,7 @@ import { UserProgress } from "./user-progress";
 import { createMockUser } from "../../types/user";
 
 export { UserProgressModalWithIcon };
-const StockOutlinedIcon = StockOutlined as unknown as React.ComponentType<any>;
+const StockOutlinedIcon = StockOutlined as any;
 
 const UserProgressModalWithIcon = ({ avatar }: { avatar: any }) => {
   const [visible, setVisible] = useState(false);
