@@ -82,6 +82,18 @@ h6 {
   box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.1);
 }
 
+/* AntD v6: keep link labels inside buttons perfectly centered */
+.ant-btn > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+  color: inherit;
+  text-decoration: none;
+}
+
 .demo-video:hover {
   filter: brightness(135%);
   cursor: pointer;

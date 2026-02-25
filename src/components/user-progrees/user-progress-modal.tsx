@@ -51,7 +51,7 @@ const UserProgressModalWithIcon = ({ avatar }: { avatar: any }) => {
           </div>
         }
         centered
-        visible={visible}
+        open={visible}
         onOk={() => setVisible(false)}
         onCancel={() => setVisible(false)}
         width={1100}

@@ -42,19 +42,13 @@ export const NFTImg = {
   borderRadius: "20px 20px 0px 0px",
 };
 
-const BtnSidesPadding = "12px";
-
 const BtnBase = {
-  fontWeight: "500",
-  fontSize: "15px",
   fontFamily: "Roboto, sans-serif",
-  paddingLeft: BtnSidesPadding,
-  paddingRight: BtnSidesPadding,
-  paddingTop: "8px",
-  paddingBottom: "31px",
   border: "none",
   color: "#FFFFFF",
   borderRadius: "20px",
+  fontSize: "15px",
+  fontWeight: "500",
 };
 
 export const BtnInfo = {
