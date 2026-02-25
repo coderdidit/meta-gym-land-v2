@@ -5,6 +5,7 @@ import SideMenu from "./GymRoomSideMenu";
 import { getGameConfig, preBoot } from "games/game";
 import { createMockUser } from "../../types/user";
 import PhaserGame from "./PhaserGame";
+import { useRef } from "react";
 
 type PhaserGameConfig = Phaser.Types.Core.GameConfig | undefined;
 
@@ -23,8 +24,14 @@ const GymRoom = ({
   const { setMinigame } = useContext(MiniGameCtx);
   // Use mock user instead of Moralis user
   const user = createMockUser();
+  const bootstrappedRef = useRef(false);
 
   const startGame = () => {
+    if (bootstrappedRef.current) {
+      return;
+    }
+    bootstrappedRef.current = true;
+
     if (miniGameId) {
       setMinigame(miniGameId);
     }
@@ -52,6 +59,7 @@ const GymRoom = ({
     }, 100);
     return () => {
       clearTimeout(timeout);
+      bootstrappedRef.current = false;
     };
   }, [avatar, miniGameId]);
 
