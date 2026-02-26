@@ -21,5 +21,6 @@
       "@games/*": ["games/*"],
       "@services/*": ["services/*"]
     }
-  }
+  },
+  "exclude": ["vite.config.ts", "vite.config.mts"]
 }

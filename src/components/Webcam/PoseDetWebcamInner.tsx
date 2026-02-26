@@ -4,8 +4,7 @@ import { BgColorsOutlined } from "@ant-design/icons";
 import { setWebcamBG, getWebcamBG } from "./state";
 
 const blackBgClass = "black-bg";
-const BgColorsOutlinedIcon =
-  BgColorsOutlined as unknown as React.ComponentType<any>;
+const BgColorsOutlinedIcon = BgColorsOutlined as any;
 
 export interface PoseDetWebcamInnerProps {
   videoConstraints: MediaTrackConstraints | Record<string, never>;

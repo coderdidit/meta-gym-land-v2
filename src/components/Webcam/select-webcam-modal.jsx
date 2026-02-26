@@ -42,7 +42,7 @@ const SelectWebcamModalWithIcon = () => {
           </div>
         }
         centered
-        visible={visible}
+        open={visible}
         onOk={() => setVisible(false)}
         onCancel={() => setVisible(false)}
       >

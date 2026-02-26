@@ -7,12 +7,6 @@
   border-bottom: none;
 }
 
-:root {
-  --main-bg-color: #ffffff;
-  --main-text-color: #595959;
-  --active-color: #ffa2c4;
-}
-
 h1,
 h2,
 h3,
@@ -72,6 +66,7 @@ h6 {
   border-bottom: 4px solid var(--active-color) !important;
 }
 
+/* Keep header menu items vertically centered in the 60px header */
 .join-mgl-btn {
   background-color: #20bf96;
 }

@@ -1,7 +1,6 @@
 import { LockFilled, StarFilled, UnlockFilled } from "@ant-design/icons";
 import { MINI_GAMES } from "@games/index";
 import { descriptionStyle, pageTitleStyle } from "GlobalStyles";
-import type { ComponentType } from "react";
 import { Link } from "react-router-dom";
 
 export { MiniGamesPage };
@@ -20,9 +19,9 @@ const miniGamesMapping = new Map([
 ]);
 
 const unlocked = true;
-const StarFilledIcon = StarFilled as ComponentType<any>;
-const UnlockFilledIcon = UnlockFilled as ComponentType<any>;
-const LockFilledIcon = LockFilled as ComponentType<any>;
+const StarFilledIcon = StarFilled as any;
+const UnlockFilledIcon = UnlockFilled as any;
+const LockFilledIcon = LockFilled as any;
 
 const MiniGamesPage = () => {
   const lockingStyle = (_unlocked: boolean) =>
