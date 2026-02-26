@@ -1,0 +1,32 @@
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  padding: 4rem 6rem;
+  background: linear-gradient(
+    135deg,
+    rgb(78, 51, 175) 14%,
+    rgb(255, 116, 166) 55%,
+    rgb(27, 222, 210) 85%,
+    rgb(27, 222, 210)
+  );
+}
+
+.heroTitle {
+  color: #ffffff;
+  padding-top: 3rem;
+}
+
+.heroSubtitle {
+  color: #ffffff;
+  font-size: 20px;
+}
+
+.heroCtaWrap {
+  padding-top: 1.5rem;
+}
+
+.heroImage {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}

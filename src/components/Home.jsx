@@ -6,18 +6,16 @@ import {
   pageTitleStyle,
   pageTitle2Style,
   descriptionStyle,
-  BtnSecondary,
   secondaryBgColor,
-  gradientBg2,
 } from "GlobalStyles";
 import { Link } from "react-router-dom";
-import { BtnPrimary, BtnInfo } from "../GlobalStyles";
 import homePageImg from "./assets/home_page/home_page_img.png";
 import howItWorks1 from "./assets/home_page/how_it_works_1.png";
 import howItWorks2 from "./assets/home_page/how_it_works_2.png";
 import howItWorks3 from "./assets/home_page/how_it_works_3.png";
 import { SocialsComponent } from "./SocialsPage";
 import { MGLSmallLogo } from "../Logos";
+import stylesCss from "./Home.module.css";
 
 const styles = {
   homeGlobal: {
@@ -42,41 +40,16 @@ const styles = {
 export default function Home() {
   return (
     <div>
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1.5fr",
-          paddingTop: "4rem",
-          paddingBottom: "4rem",
-          paddingLeft: "6rem",
-          paddingRight: "6rem",
-          background: gradientBg2,
-        }}
-      >
+      <section className={stylesCss.hero}>
         <div style={{}}>
-          <div
-            style={{
-              ...styles.titleText,
-              paddingTop: "3rem",
-              color: "#FFFFFF",
-            }}
-          >
+          <div className={stylesCss.heroTitle} style={styles.titleText}>
             Ready to get started?
           </div>
-          <div
-            style={{
-              ...styles.text,
-              fontSize: "20px",
-            }}
-          >
+          <div className={stylesCss.heroSubtitle} style={styles.text}>
             Follow steps below, have fun and get fit!
           </div>
 
-          <div
-            style={{
-              paddingTop: "1.5rem",
-            }}
-          >
+          <div className={stylesCss.heroCtaWrap}>
             {/* <Button
               type="primary"
               style={{
@@ -86,11 +59,7 @@ export default function Home() {
             >
               <Link to="/demo-avatar">Play now</Link>
             </Button> */}
-            <Button
-              style={{
-                ...BtnInfo,
-              }}
-            >
+            <Button className="mgl-btn mgl-btn-info">
               <Link to="/demo-avatar">Try with Demo GymBuddy</Link>
             </Button>
           </div>
@@ -100,11 +69,7 @@ export default function Home() {
           preview={false}
           src={homePageImg}
           alt=""
-          style={{
-            width: "100%",
-            padding: "0px",
-            margin: "0px",
-          }}
+          className={stylesCss.heroImage}
         />
       </section>
 
@@ -118,10 +83,8 @@ export default function Home() {
           <div style={pageTitle2Style}>How it works?</div>
 
           <Button
-            style={{
-              ...BtnSecondary,
-              margin: "1rem",
-            }}
+            className="mgl-btn mgl-btn-secondary"
+            style={{ margin: "1rem" }}
             onClick={() =>
               window.open(
                 "https://www.youtube.com/watch?v=vTWeE7YJnj4",

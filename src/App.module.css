@@ -1,0 +1,32 @@
+.appRoot {
+  background: none;
+  color: var(--mgl-main-text);
+  font-family: Roboto, sans-serif;
+}
+
+.header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  height: 60px;
+}
+
+.headerBrandWrap {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  background: none;
+}
+
+.headerBrandLink {
+  display: inline-flex;
+  align-items: center;
+}
+
+.content {
+  font-family: Roboto, sans-serif;
+  margin-top: 10px;
+  min-height: 30vh;
+}

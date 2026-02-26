@@ -1,0 +1,30 @@
+.menu {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  justify-content: right;
+  background: none;
+  padding: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.menu:global(.ant-menu-horizontal) {
+  height: 100%;
+  line-height: normal;
+  align-items: center;
+}
+
+.menu:global(.ant-menu-horizontal) > :global(.ant-menu-item),
+.menu:global(.ant-menu-horizontal) > :global(.ant-menu-submenu) {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  line-height: normal;
+}
+
+.menu :global(.ant-menu-title-content) {
+  display: inline-flex;
+  align-items: center;
+}

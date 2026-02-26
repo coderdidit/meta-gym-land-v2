@@ -1,6 +1,7 @@
 import { useLocation } from "react-router";
 import { Menu } from "antd";
 import { NavLink } from "react-router-dom";
+import styles from "./MenuItems.module.css";
 
 function MenuItems() {
   const { pathname } = useLocation();
@@ -40,20 +41,9 @@ function MenuItems() {
 
   return (
     <Menu
-      className="header-menu"
+      className={styles.menu}
       theme="light"
       mode="horizontal"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        height: "100%",
-        fontSize: "17px",
-        fontWeight: "700",
-        width: "100%",
-        justifyContent: "right",
-        background: "none",
-        padding: "0",
-      }}
       selectedKeys={[pathname]}
       items={menuItems}
     />
