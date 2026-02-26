@@ -71,11 +71,16 @@ const App = () => {
           <Header style={styles.header}>
             <div
               style={{
-                marginTop: "2rem",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
                 background: "none",
               }}
             >
-              <Link to="/" style={styles.homeLink}>
+              <Link
+                to="/"
+                style={{ display: "inline-flex", alignItems: "center" }}
+              >
                 <MGLLogo />
               </Link>
             </div>

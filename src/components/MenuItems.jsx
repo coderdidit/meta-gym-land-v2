@@ -40,10 +40,13 @@ function MenuItems() {
 
   return (
     <Menu
+      className="header-menu"
       theme="light"
       mode="horizontal"
       style={{
         display: "flex",
+        alignItems: "center",
+        height: "100%",
         fontSize: "17px",
         fontWeight: "700",
         width: "100%",

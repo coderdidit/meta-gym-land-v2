@@ -72,6 +72,26 @@ h6 {
   border-bottom: 4px solid var(--active-color) !important;
 }
 
+/* Keep header menu items vertically centered in the 60px header */
+.header-menu.ant-menu-horizontal {
+  height: 100%;
+  line-height: normal;
+  align-items: center;
+}
+
+.header-menu.ant-menu-horizontal > .ant-menu-item,
+.header-menu.ant-menu-horizontal > .ant-menu-submenu {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  line-height: normal;
+}
+
+.header-menu .ant-menu-title-content {
+  display: inline-flex;
+  align-items: center;
+}
+
 .join-mgl-btn {
   background-color: #20bf96;
 }
